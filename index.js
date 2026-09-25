@@ -147,28 +147,33 @@ async function startBot() {
     const sock = makeWASocket({
         auth: state,
         logger: pino({ level: 'silent' }),
-        printQRInTerminal: false
+        printQRInTerminal: false,
+        browser: ["Ubuntu", "Chrome", "20.0.04"]
     });
 
     sock.ev.on('creds.update', saveCreds);
 
-    // Initial pairing code request if not registered yet
-    if (!sock.authState.creds.registered && process.env.PAIRING_NUMBER) {
-        setTimeout(async () => {
-            try {
-                const rawPhone = process.env.PAIRING_NUMBER.replace(/[^0-9]/g, '');
-                const code = await sock.requestPairingCode(rawPhone);
-                console.log(`\n====================================`);
-                console.log(`🔑 INITIAL PAIRING CODE: ${code}`);
-                console.log(`====================================\n`);
-            } catch (err) {
-                console.error('❌ Failed to request initial pairing code:', err);
-            }
-        }, 4000);
-    }
+    let pairingRequested = false;
 
-    sock.ev.on('connection.update', (update) => {
+    sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
+
+        // Request pairing code when socket is ready and unregistered
+        if (!sock.authState.creds.registered && process.env.PAIRING_NUMBER && !pairingRequested) {
+            pairingRequested = true;
+            setTimeout(async () => {
+                try {
+                    const rawPhone = process.env.PAIRING_NUMBER.replace(/[^0-9]/g, '');
+                    const code = await sock.requestPairingCode(rawPhone);
+                    console.log(`\n====================================`);
+                    console.log(`🔑 INITIAL PAIRING CODE: ${code}`);
+                    console.log(`====================================\n`);
+                } catch (err) {
+                    console.error('❌ Failed to request initial pairing code:', err);
+                    pairingRequested = false; // Allow retry on reconnect if it failed
+                }
+            }, 6000); // Delay allows the WebSocket connection to stabilize
+        }
 
         if (qr && !process.env.PAIRING_NUMBER) {
             console.log('\nScan this QR code with WhatsApp:\n');
@@ -176,7 +181,8 @@ async function startBot() {
         }
 
         if (connection === 'close') {
-            const shouldReconnect = (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut;
+            const statusCode = (lastDisconnect?.error)?.output?.statusCode;
+            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
             console.log('⚡ Connection closed. Reconnecting:', shouldReconnect);
             if (shouldReconnect) startBot();
         } else if (connection === 'open') {

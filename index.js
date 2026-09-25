@@ -152,10 +152,25 @@ async function startBot() {
 
     sock.ev.on('creds.update', saveCreds);
 
+    // Initial pairing code request if not registered yet
+    if (!sock.authState.creds.registered && process.env.PAIRING_NUMBER) {
+        setTimeout(async () => {
+            try {
+                const rawPhone = process.env.PAIRING_NUMBER.replace(/[^0-9]/g, '');
+                const code = await sock.requestPairingCode(rawPhone);
+                console.log(`\n====================================`);
+                console.log(`🔑 INITIAL PAIRING CODE: ${code}`);
+                console.log(`====================================\n`);
+            } catch (err) {
+                console.error('❌ Failed to request initial pairing code:', err);
+            }
+        }, 4000);
+    }
+
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect, qr } = update;
 
-        if (qr) {
+        if (qr && !process.env.PAIRING_NUMBER) {
             console.log('\nScan this QR code with WhatsApp:\n');
             qrcode.generate(qr, { small: true });
         }

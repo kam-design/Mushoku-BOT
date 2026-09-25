@@ -1,0 +1,42 @@
+### 1. Reincarnate & Pick a Class
+
+* Type `#reincarnate` to register your adventurer profile.
+* Pick your path using `#mage`, `#warrior`, or `#summoner`.
+
+### 2. Learn Skills or Tame Beasts
+
+* Type `#skills` to check available skills or beasts for your class.
+* Mages and Warriors spend Skill Points (SP) using `#learn <Skill Name>`.
+* Summoners form contracts using `#tame <Beast Name>`.
+
+### 3. Take On Quests & Combat
+
+* Type `#quest` to spawn a monster matched to your level.
+* **Summoners:** Type `#summon <Beast Name>` to bring your beast into battle first. Check beast moves using `#beast`.
+* Type `#attack <Skill Move Name or>` to strike.
+* Defeat the monster to gain Gold and EXP to level up.
+
+### 4. Gear Up at the Shop
+
+* Type `#shop` to browse items in the market.
+* Use `#buy <Item Name>` to spend Gold.
+* Check your bag with `#inv`.
+* Restore stats using `#use <Item Name>`.
+
+### 5. Challenge Players (PvP)
+
+* Challenge another player using `#pvp @player`.
+* The tagged player must type `#accept` to start the duel.
+* Take turns using `#attack <Skill Name>` until one player falls.
+
+### 6. Romance & Marriage
+
+* Type `#waifu` to list available maidens.
+* Type `#hello <Maiden Name>` to interact and boost affection.
+* Buy a Dragon Scale from `#shop` and type `#propose <Maiden Name>` to marry her.
+* Type `#wife` to view your marital perks.
+
+### 7. Climb the Rankings
+
+* Check your status using `#profile`.
+* Type `#lb` or `#top` to view the highest-ranked adventurers in the world.

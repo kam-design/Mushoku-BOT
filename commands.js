@@ -1,5 +1,6 @@
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs').promises;
+const fsSync = require('fs');
 const { Player } = require('./database');
 const { GODS_DATABASE, findGod } = require('./God');
 const { 
@@ -92,9 +93,10 @@ async function handleCommand(sock, msg) {
 
             const imagePath = path.join(__dirname, 'Mushoku.png');
 
-            if (fs.existsSync(imagePath)) {
+            if (fsSync.existsSync(imagePath)) {
+                const imageBuffer = await fs.readFile(imagePath);
                 await sock.sendMessage(sender, {
-                    image: fs.readFileSync(imagePath),
+                    image: imageBuffer,
                     caption: helpText
                 });
             } else {
@@ -116,13 +118,14 @@ async function handleCommand(sock, msg) {
             godsText += `📌 *Usage:* Type \`#challenge <god name>\` to challenge one! (e.g. \`#challenge dragon\`)`;
 
             let imagePath = path.join(__dirname, 'Gods.png');
-            if (!fs.existsSync(imagePath)) {
+            if (!fsSync.existsSync(imagePath)) {
                 imagePath = path.join(__dirname, 'Gods.webp');
             }
 
-            if (fs.existsSync(imagePath)) {
+            if (fsSync.existsSync(imagePath)) {
+                const imageBuffer = await fs.readFile(imagePath);
                 await sock.sendMessage(sender, {
-                    image: fs.readFileSync(imagePath),
+                    image: imageBuffer,
                     caption: godsText
                 });
             } else {
@@ -194,9 +197,10 @@ async function handleCommand(sock, msg) {
 
             const waifuImagePath = path.join(__dirname, 'waifu.png');
 
-            if (fs.existsSync(waifuImagePath)) {
+            if (fsSync.existsSync(waifuImagePath)) {
+                const imageBuffer = await fs.readFile(waifuImagePath);
                 await sock.sendMessage(sender, {
-                    image: fs.readFileSync(waifuImagePath),
+                    image: imageBuffer,
                     caption: helpText
                 });
             } else {
@@ -288,8 +292,9 @@ async function handleCommand(sock, msg) {
                          `✨ *Marital Perk:* ${wife.perk}\n` +
                          `💖 *Affection Level:* Maxed (100+)`;
 
-            if (fs.existsSync(imagePath)) {
-                await sock.sendMessage(sender, { image: fs.readFileSync(imagePath), caption: text });
+            if (fsSync.existsSync(imagePath)) {
+                const imageBuffer = await fs.readFile(imagePath);
+                await sock.sendMessage(sender, { image: imageBuffer, caption: text });
             } else {
                 await sock.sendMessage(sender, { text });
             }
@@ -460,11 +465,9 @@ async function handleCommand(sock, msg) {
                     return sock.sendMessage(sender, { text: `❌ Slot number must be between 1 and ${MAX_ACTIVE_MOVES}.` });
                 }
 
-                const existingIndex = player.skills.indexOf(moveId);
-                if (existingIndex !== -1) {
-                    player.skills.splice(existingIndex, 1);
-                }
-                player.skills.splice(targetSlot - 1, 0, moveId);
+                player.skills = player.skills.filter(id => id !== moveId);
+                const insertIndex = Math.min(Math.max(0, targetSlot - 1), player.skills.length);
+                player.skills.splice(insertIndex, 0, moveId);
 
                 await player.save();
                 return sock.sendMessage(sender, { text: `🔄 *LOADOUT UPDATED!*\n\nMoved \`${moveId}\` to Skill Slot **#${targetSlot}**.` });
@@ -515,7 +518,7 @@ async function handleCommand(sock, msg) {
             if (!player || !player.isRegistered) return sock.sendMessage(sender, { text: '❌ Type *#reincarnate* first.' });
 
             const skillId = args[0]?.toLowerCase();
-            if (!skillId) return sock.sendMessage(sender, { text: '❌ Usage: *#learn <move ID>*</move>' });
+            if (!skillId) return sock.sendMessage(sender, { text: '❌ Usage: *#learn <move ID>*' });
 
             const availableSkills = SKILL_DATABASE[player.class]?.[player.element] || [];
             const skillToLearn = availableSkills.find(s => s.id === skillId);
@@ -851,7 +854,7 @@ async function handleCommand(sock, msg) {
 
                 if (skill && player.skills.includes(skillId)) {
                     let baseDmg = skill.dmg;
-                    if (player.equippedWeapon && player.class === 'Warrior') {
+                    if (player.equippedWeapon) {
                         baseDmg = Math.floor(baseDmg * 1.20);
                     }
 
@@ -997,7 +1000,7 @@ async function handleCommand(sock, msg) {
 
                 let baseDmg = skill.dmg;
 
-                if (player.equippedWeapon && player.class === 'Warrior') {
+                if (player.equippedWeapon) {
                     baseDmg = Math.floor(baseDmg * 1.20);
                 }
 
@@ -1031,7 +1034,7 @@ async function handleCommand(sock, msg) {
                 }
 
                 player.inCombat = false;
-                player.enemy = undefined;
+                player.enemy = null;
                 player.gold += goldGained;
                 player.exp += expGained;
 
@@ -1083,7 +1086,7 @@ async function handleCommand(sock, msg) {
             if (player.hp <= 0) {
                 player.hp = 0;
                 player.inCombat = false;
-                player.enemy = undefined;
+                player.enemy = null;
                 await player.save();
 
                 return sock.sendMessage(sender, { 
@@ -1119,8 +1122,9 @@ async function handleCommand(sock, msg) {
                     const imagePath = path.join(__dirname, 'NPC', maiden.image);
                     const caption = `🌸 *${maiden.name}*\n✨ *Perk:*${maiden.perk}`;
 
-                    if (fs.existsSync(imagePath)) {
-                        await sock.sendMessage(sender, { image: fs.readFileSync(imagePath), caption });
+                    if (fsSync.existsSync(imagePath)) {
+                        const imageBuffer = await fs.readFile(imagePath);
+                        await sock.sendMessage(sender, { image: imageBuffer, caption });
                     } else {
                         await sock.sendMessage(sender, { text: `📷 Image for ${maiden.name} not found at: \`${imagePath}\`` });
                     }

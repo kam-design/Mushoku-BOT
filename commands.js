@@ -334,26 +334,15 @@ async function handleCommand(sock, msg) {
                 }
 
                 const targetJid = mentionedJids[0];
-                const deletedPlayer = await Player.findOneAndDelete({ jid: targetJid });
+                await Player.deleteMany({ jid: targetJid });
 
-                if (deletedPlayer) {
-                    await sock.sendMessage(sender, { 
-                        text: `🧹 *SUPREME ADMIN OVERRIDE*\nWiped database profile for: @${targetJid.split('@')[0]}`,
-                        mentions: [targetJid]
-                    });
-                } else {
-                    await sock.sendMessage(sender, { 
-                        text: `⚠️ No player profile found for @${targetJid.split('@')[0]}.`,
-                        mentions: [targetJid]
-                    });
-                }
+                await sock.sendMessage(sender, { 
+                    text: `🧹 *SUPREME ADMIN OVERRIDE*\nWiped database profile(s) for: @${targetJid.split('@')[0]}`,
+                    mentions: [targetJid]
+                });
             } else {
-                const deletedSelf = await Player.findOneAndDelete({ jid: sender });
-                if (deletedSelf) {
-                    await sock.sendMessage(sender, { text: '🧹 *PROFILE CLEARED*\nYour character profile was deleted. Use *#reincarnate* to restart.' });
-                } else {
-                    await sock.sendMessage(sender, { text: '⚠️ You don\'t have an active character profile to clear.' });
-                }
+                await Player.deleteMany({ jid: sender });
+                await sock.sendMessage(sender, { text: '🧹 *PROFILE CLEARED*\nYour character profile was deleted. Use *#reincarnate* to restart.' });
             }
             break;
         }

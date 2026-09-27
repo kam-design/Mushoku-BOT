@@ -357,7 +357,16 @@ async function handleCommand(sock, msg) {
             }
 
             if (!player) {
-                player = await Player.create({ jid: sender, name: pushName });
+                player = await Player.create({ 
+                    jid: sender, 
+                    name: pushName,
+                    isRegistered: false,
+                    class: 'None'
+                });
+            } else {
+                player.isRegistered = false;
+                player.class = 'None';
+                await player.save();
             }
 
             const reincarnateMsg = 
